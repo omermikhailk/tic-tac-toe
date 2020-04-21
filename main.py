@@ -18,7 +18,7 @@ def make_board():
     board = [[] for i in range(3)]
     for j in range(3):
         board[j] = ['.' for w in range(3)]
-
+    
     return board
 
 
@@ -34,14 +34,14 @@ def validate_move(coord_str, board):
     """
     Validates the move and makes sure that it is in the board
     and that that square is not already occupied.
-
+    
     Also makes sure that the move is an integer.
-
+    
     Returns True for a valid move.
     """
     if not coord_str.isdigit():
         return False
-
+    
     coord = int(coord_str)
     if 1 <= coord <= 9:
         x, y = COORD_MAP[coord]
@@ -56,22 +56,22 @@ def insert_move(coord, whose_turn, board):
     Places either X or O (depends on `whose_turn`) in
     the given coordinate. And then returns the new board.
     """
-
+    
     x, y = COORD_MAP[coord]
     board[x][y] = whose_turn
-
+    
     return board
 
 
 def game_decision(board):
     """
     Evaluates what the current position on the board means:
-
+    
     0 for X victory
     1 for O victory
     2 for draw
     3 for ongoing
-
+    
     Checks diagonally, vertically and horizontally
     for matching moves.
     """
@@ -81,7 +81,7 @@ def game_decision(board):
         'Draw': 2,
         'Ongoing': 3
     }
-
+    
     # Checking to see if diagonal elements match and that no '.' (dots) match
     diag_victory = (
             (board[0][0] == board[1][1] == board[2][2] and
@@ -92,21 +92,21 @@ def game_decision(board):
     )
     if diag_victory:
         return decision[board[1][1]]
-
+    
     # Checking to see if horizontal elements match and that no '.' (dots) match
     for i in range(3):
         if board[i][0] == board[i][1] == board[i][2] and board[i][0] in 'XO':
             return decision[board[i][0]]
-
+    
     # Checking to see if vertical elements match and that no '.' (dots) match
     for i in range(3):
         if board[0][i] == board[1][i] == board[2][i] and board[i][0] in 'XO':
             return decision[board[0][i]]
-
+    
     for row in board:
         if '.' in row:
             return decision['Ongoing']
-
+    
     # If there aren't any matches or empty spaces, it's a draw
     return decision['Draw']
 
@@ -131,7 +131,7 @@ def get_turn(turn_num):
     """
     Takes in the current number of turns and returns
     whether it is (player 1 or player 2)'s turn.
-
+    
     Player 1 always goes first.
     """
     if turn_num % 2:
@@ -146,7 +146,7 @@ def main():
           'of 9.')
     print('The numbers from the board increase from left to right.')
     print('\nNow let\'s play!\n\n')
-
+    
     # Sets up the players and the board
     player_1 = choose()
     if player_1 == 'X':
@@ -155,40 +155,40 @@ def main():
         player_2 = 'X'
     board = make_board()
     turn_num = 1
-
+    
     # Visually separates the start of the game from the setup
     print()
-
+    
     # While the game is not drawn or won by either side it will continue
     while not game_decision(board) in (0, 1, 2):
         # The game has started
-
+    
         if get_turn(turn_num) == 1:
             player_current = player_1
         else:
             player_current = player_2
-
+    
         print_board(board)
         print('\nMake your move!')
-
+    
         # Infinite loop until we get a correct coordinate input
         while True:
             move = input('Enter the coordinate you want to place your marker ' +
                          'on: ')
-
+    
             if not validate_move(move, board):
                 print('\nPlease enter a valid coordinate.\n')
                 continue
             # Converted to an integer for use in `insert_board`
             move = int(move)
             break
-
+    
         board = insert_move(move, player_current, board)
         turn_num += 1
-
+    
         # Visually separates subsequent moves
         print()
-
+    
     # Sees which player wins
     result = game_decision(board)
     if result == 2:
