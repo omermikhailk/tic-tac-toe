@@ -1,202 +1,197 @@
-COORD_MAP = {
-        1: (0, 0),
-        2: (0, 1),
-        3: (0, 2),
-        4: (1, 0),
-        5: (1, 1),
-        6: (1, 2),
-        7: (2, 0),
-        8: (2, 1),
-        9: (2, 2)
-    }
-
-
 def make_board():
     """
-    Returns a tic tac toe board (consisting of 2D lists).
+    Returns a tic tac toe board (1D array).
     """
-    board = [[] for i in range(3)]
-    for j in range(3):
-        board[j] = ['.' for w in range(3)]
+    board = ['.' for i in range(9)]
 
     return board
 
 
 def print_board(board):
     """
-    Prints out the board row by row
+    Prints out the board row by row, 3 elements
+    at a time.
     """
-    for row in board:
-        print(*row)
+    for i in range(0, 9, 3):
+        print(*board[i: i + 3])
 
 
-def validate_move(coord_str, board):
+def validate_move(move, board):
     """
-    Validates the move and makes sure that it is in the board
-    and that that square is not already occupied.
+    Validates the move by making sure that the square is empty
+    and that the coordinate is not outside of the board.
 
-    Also makes sure that the move is an integer.
+    Also makes sure that the movie is a non-negative integer.
 
     Returns True for a valid move.
     """
-    if not coord_str.isdigit():
-        return False
-
-    coord = int(coord_str)
-    if 1 <= coord <= 9:
-        x, y = COORD_MAP[coord]
-        if board[x][y] == '.':
-            # Valid move
-            return True
+    if move.isdigit():
+        move = int(move)
+        if 1 <= move <= 9:
+            if board[move - 1] == '.':
+                return True
     return False
 
 
-def insert_move(coord, whose_turn, board):
+def get_move(board):
     """
-    Places either X or O (depends on `whose_turn`) in
-    the given coordinate. And then returns the new board.
+    Gets the move from the user as input and validates it and then
+    returns the move as an integer
     """
+    while True:
+        move = input('''Please choose the square that you would like to place
+your marker on (from 1 - 9): ''')
 
-    x, y = COORD_MAP[coord]
-    board[x][y] = whose_turn
+        if not validate_move(move, board):
+            print('Please enter a valid coordinate.\n')
+            continue
 
+        # We subtract 1 as the index for the first square is 0
+        # but we present it as 1 for the user to make input
+        # easier and from 1 - 9
+        return int(move) - 1
+
+
+def insert_move(move, board, player_current):
+    """
+    Places 'X' or 'O' (depends on `player_current`) on the given
+    coordinate (move), and then returns the new version of the
+    board.
+    """
+    board[move] = player_current
     return board
 
 
-def game_decision(board):
+def game_state(board):
     """
-    Evaluates what the current position on the board means:
+    Returns 0 if the winner is 'X' or 1 if the winner is 'O', after
+    looking through the board and seeing if there is a won
+    position.
 
-    0 for X victory
-    1 for O victory
-    2 for draw
-    3 for ongoing
-
-    Checks diagonally, vertically and horizontally
-    for matching moves.
+    If there is no won position, returns 2 if ongoing and 3 if draw.
     """
-    decision = {
-        'X': 0,
-        'O': 1,
-        'Draw': 2,
-        'Ongoing': 3
-    }
-
-    # Checking to see if diagonal elements match and that no '.' (dots) match
-    diag_victory = (
-            (board[0][0] == board[1][1] == board[2][2] and
-             board[1][1] in 'XO')
-            or
-            (board[2][0] == board[1][1] == board[0][2] and
-                board[1][1] in 'XO')
+    won_combinations = (
+        (0, 1, 2),
+        (3, 4, 5),
+        (6, 7, 8),
+        (0, 3, 6),
+        (1, 4, 7),
+        (2, 5, 8),
+        (0, 4, 8),
+        (2, 4, 6)
     )
-    if diag_victory:
-        return decision[board[1][1]]
+    for comb in won_combinations:
+        a, b, c = comb
+        a_val, b_val, c_val = board[a], board[b], board[c]
+        if a_val == b_val == c_val and '.' not in (a_val, b_val, c_val):
+            if board[a] == 'X':
+                # 'X' victory
+                return 0
+            # 'O' victory
+            return 1
 
-    # Checking to see if horizontal elements match and that no '.' (dots) match
-    for i in range(3):
-        if board[i][0] == board[i][1] == board[i][2] and board[i][0] in 'XO':
-            return decision[board[i][0]]
+    for i in range(0, 9, 3):
+        if '.' in board[i: i + 3]:
+            # There are still unfilled squares so the game
+            # is unfinished.
+            return 2
 
-    # Checking to see if vertical elements match and that no '.' (dots) match
-    for i in range(3):
-        if board[0][i] == board[1][i] == board[2][i] and board[i][0] in 'XO':
-            return decision[board[0][i]]
-
-    for row in board:
-        if '.' in row:
-            return decision['Ongoing']
-
-    # If there aren't any matches or empty spaces, it's a draw
-    return decision['Draw']
+    # Only other possibility is a draw
+    return 3
 
 
 def choose():
     """
-    Lets the player decide if they want to be
-    X or O. And then returns that decision.
+    Lets the player decide if they want to be 'X' or 'O'.
+
+    Then returns that decision
     """
     while True:
-        decision = input('Would you like to be \'X\' or \'O\' (please write, ' +
-                         'in capitals):\n')
-        # Validation of response
-        if decision not in 'XO' or len(decision) > 1:
+        decision = input('Would you like to be \'X\' or \'O\'?\n').upper()
+
+        # Validation of decision
+        if decision not in 'XO' or len(decision) > 1 or not decision:
             print('\nPlease enter a correct response.')
-            # Loop restarts until a correct response is received
             continue
+
         return decision
 
 
-def get_turn(turn_num):
+def whose_turn(turn_num):
     """
-    Takes in the current number of turns and returns
-    whether it is (player 1 or player 2)'s turn.
+    Returns whether it is Player 1 or Player 2's turn.
 
-    Player 1 always goes first.
+    NOTE: Player 1 always goes first.
     """
     if turn_num % 2:
         return 1
     return 2
 
 
-def main():
-    print('Welcome to Tic, Tac, Toe! Let\'s get started with some rules!')
-    print('The top left square of the board has a coordinate of 1, ',
-          'while the bottom right square of the board has a coordinate ',
-          'of 9.')
-    print('The numbers from the board increase from left to right.')
-    print('\nNow let\'s play!\n\n')
+def print_intro():
+    """
+    Prints the introduction, rules and controls of the game.
+    """
+    print('''\nWelcome to Tic, Tac, Toe! Let's get started with some rules!\n
+The aim of the game is to make your marker (X or O) make a diagonal, vertical
+or horizontal line with the rest of your markers. If you do so then you win.
+Otherwise the game is a draw.
+        
+The way that the game is structured is that you will take turns placing
+your markers and will be asked to input a number between 1 to 9. Where
+that number represents the square on the board, like so:
+        
+1 2 3
+4 5 6
+7 8 9
+        
+Now let's get started!''')
 
-    # Sets up the players and the board
+
+def main():
+    # print_intro()
+
+    # Sets up the board and the players
+    board = make_board()
+    turn_num = 1
     player_1 = choose()
     if player_1 == 'X':
         player_2 = 'O'
     else:
         player_2 = 'X'
-    board = make_board()
-    turn_num = 1
 
-    # Visually separates the start of the game from the setup
+    # To visually separate the start of the game from the rules
     print()
 
-    # While the game is not drawn or won by either side it will continue
-    while not game_decision(board) in (0, 1, 2):
+    # While the game is ongoing (2)
+    while game_state(board) == 2:
         # The game has started
 
-        if get_turn(turn_num) == 1:
+        if whose_turn(turn_num) == 1:
             player_current = player_1
         else:
             player_current = player_2
 
         print_board(board)
-        print('\nMake your move!')
+        print()
 
-        # Infinite loop until we get a correct coordinate input
-        while True:
-            move = input('Enter the coordinate you want to place your marker ' +
-                         'on: ')
-
-            if not validate_move(move, board):
-                print('\nPlease enter a valid coordinate.\n')
-                continue
-            # Converted to an integer for use in `insert_board`
-            move = int(move)
-            break
-
-        board = insert_move(move, player_current, board)
+        move = get_move(board)
+        board = insert_move(move, board, player_current)
         turn_num += 1
 
         # Visually separates subsequent moves
         print()
 
-    # Sees which player wins
-    result = game_decision(board)
-    if result == 2:
-        print('The game is a draw!')
-    if (player_1, result) in [('X', 0), ('O', 1)]:
-        print('Player 1 wins!')
+    print()
+    print_board(board)
+
+    result = game_state(board)
+    if result == 0:
+        print('Player X won!')
+    elif result == 1:
+        print('Player O won!')
     else:
-        print('Player 2 wins!')
+        print('The game was a draw!')
 
 
 if __name__ == '__main__':
